@@ -38,3 +38,8 @@ Successfully established a reproducible Python environment and version control r
 - **What the data showed:** The observed counts decay exponentially over time starting from $N_0 = 5000$ at $t = 0$.
 - **Comparison with analytical law:** Based on the figure, the observed data closely matches the analytical law $N(t) = N_0 e^{-\lambda t}$ ($\lambda = 0.3$), with minor random statistical scatter.
 - **Snakemake pipeline:** The `Snakefile` automates reproducing `figure.png` from `decay_observed.csv` via `plot.py` only when the output figure is missing or outdated.
+
+## PW2 --- Lab A
+
+- **Mean Acceleration & Noise Observation:** The measured mean acceleration is `-8.58 m/s²` (close to $-g = -9.81\text{ m/s}^2$), while the standard deviation is `28.72 m/s²` because taking two numerical derivatives amplifies small measurement noise between consecutive points.
+- **Integration Recovery:** Integrating the noisy acceleration twice back to position recovers the original trajectory within a maximum difference of `0.78 m`, showing that integration accumulates values and cancels out random noise.
