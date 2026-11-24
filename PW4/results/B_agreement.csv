@@ -1,0 +1,4 @@
+Method,Agreement
+K-Means on Scaled Data (13D),0.9663
+K-Means on Raw Unscaled Data (13D),0.7022
+K-Means on Scaled PC1-PC2 (2D),0.9663
