@@ -50,3 +50,17 @@ Successfully established a reproducible Python environment and version control r
 - **Reaction Kinetics (Part 3):** Fitting the first-order decay model $C(t) = C_0 e^{-kt}$ via SLSQP yielded a rate constant of $k = 0.2618$.
 - **Chemical Equilibrium (Part 4):** Both Newton's method and SLSQP agreed on the equilibrium extent $x = 0.6667$, giving an equilibrium composition of $0.3333\text{ mol }\text{H}_2$, $0.3333\text{ mol }\text{I}_2$, and $1.3333\text{ mol }\text{HI}$.
 - **Titration Equivalence Point (Part 5 Bonus):** Differentiating the titration curve identified the steepest slope ($\text{dpH}/\text{dV} = 4.00$) and equivalence point at $V = 50.00\text{ mL}$.
+
+## PW3 --- Data, Distributions, Testing, and Causation
+
+- **Dataset 1 — Distributions & Normality (Session 1):**
+  - `age`: Slightly left-skewed ($\text{skew} = -0.201$), Shapiro-Wilk $W = 0.9864, p = 0.0058$ $\rightarrow$ **Non-normal**.
+  - `chol`: Strongly right-skewed ($\text{skew} = +1.138$) with high outliers, Shapiro-Wilk $W = 0.9469, p = 5.36 \times 10^{-9}$ $\rightarrow$ **Non-normal**.
+  - `trestbps`: Right-skewed ($\text{skew} = +0.710$), Shapiro-Wilk $W = 0.9659, p = 1.46 \times 10^{-6}$ $\rightarrow$ **Non-normal**.
+  - `thalach`: Left-skewed ($\text{skew} = -0.535$), Shapiro-Wilk $W = 0.9763, p = 6.62 \times 10^{-5}$ $\rightarrow$ **Non-normal**.
+- **Hypothesis Test on Max Heart Rate (`thalach`) (Task 4):** Because `thalach` deviates from normality, a two-sided Mann-Whitney U test was chosen (confirmed by Welch's t-test). The two groups differ significantly ($U = 17038.0, p = 9.80 \times 10^{-14}$): `target=1` has a mean of $158.47 \pm 1.49$ (SEM) bpm compared to $139.10 \pm 1.92$ (SEM) bpm for `target=0`, which matches the non-overlapping 95% confidence intervals in `thalach_comparison.png`.
+- **Age vs. Max Heart Rate (Task 5):** `age` and `thalach` move in opposite directions with a moderate, highly significant negative correlation ($\text{Spearman } r = -0.3981, p = 6.02 \times 10^{-13}$; $\text{Pearson } r = -0.3985$), showing that maximum heart rate decreases with age.
+- **Dataset 2 — Correlation vs. Causation Mystery (Tasks 6 & 7):**
+  - *Naive analysis:* Across all 1,000 patients, `cadmium` appeared strongly correlated with `malignancy` ($r = +0.8800$), whereas `benzene` appeared much weaker ($r = +0.3847$).
+  - *Controlling for confounding (`pollution_index`):* Restricting the analysis to patients within a narrow `pollution_index` band ($39.8\text{--}59.7, n=200$) caused the `cadmium` correlation to collapse ($r = +0.3095$) while `benzene`'s correlation jumped to $r = +0.6966$ ($p = 2.28 \times 10^{-30}$). Controlling for `age` alone left the spurious pattern intact ($r_{\text{cadmium}} = +0.8947$). Therefore, **`benzene` is the true driver of malignancy**, while `cadmium` only looked guilty due to confounding with area `pollution_index`.
+- **Bonus — Category Balance (`target`):** The `target` classes are well balanced ($54.5\%$ vs. $45.5\%$), yielding a Shannon entropy of **$0.9943\text{ bits}$** (very close to the $1.0000\text{ bit}$ maximum unpredictability for a binary variable).
