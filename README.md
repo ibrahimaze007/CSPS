@@ -43,3 +43,10 @@ Successfully established a reproducible Python environment and version control r
 
 - **Mean Acceleration & Noise Observation:** The measured mean acceleration is `-8.58 m/s²` (close to $-g = -9.81\text{ m/s}^2$), while the standard deviation is `28.72 m/s²` because taking two numerical derivatives amplifies small measurement noise between consecutive points.
 - **Integration Recovery:** Integrating the noisy acceleration twice back to position recovers the original trajectory within a maximum difference of `0.78 m`, showing that integration accumulates values and cancels out random noise.
+
+## PW2 --- Lab B
+
+- **Method Comparison (Part 2):** On the convex function $f(x) = (x - 3)^2 + 1$, Gradient Descent, Newton's method, and SLSQP all converged to $x = 3.0$. On the multi-stationary landscape $g(x) = x^4 - 3x^2 + x + 5$, the starting point and algorithm mattered: from $x_0 = 0.0$, Gradient Descent and SLSQP reached the global minimum ($x \approx -1.3008$), whereas Newton's method converged to a local maximum ($x \approx 0.1699$, $g''(x) = -5.65 < 0$). From $x_0 = 2.0$, Gradient Descent and Newton settled in a local minimum ($x \approx 1.1309$, $g''(x) = 9.35 > 0$), while SLSQP still found the global minimum ($x \approx -1.3006$).
+- **Reaction Kinetics (Part 3):** Fitting the first-order decay model $C(t) = C_0 e^{-kt}$ via SLSQP yielded a rate constant of $k = 0.2618$.
+- **Chemical Equilibrium (Part 4):** Both Newton's method and SLSQP agreed on the equilibrium extent $x = 0.6667$, giving an equilibrium composition of $0.3333\text{ mol }\text{H}_2$, $0.3333\text{ mol }\text{I}_2$, and $1.3333\text{ mol }\text{HI}$.
+- **Titration Equivalence Point (Part 5 Bonus):** Differentiating the titration curve identified the steepest slope ($\text{dpH}/\text{dV} = 4.00$) and equivalence point at $V = 50.00\text{ mL}$.
