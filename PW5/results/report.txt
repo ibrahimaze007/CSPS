@@ -1,0 +1,5 @@
+=== Earthquake Seismic Analysis Report ===
+Event seismogram_A.csv: P-arrival = 108.42 s, S-arrival = 144.08 s, Distance R = 306.13 km, PGV = 1.5105 cm/s, Magnitude M = 6.66
+Event seismogram_B.csv: P-arrival = 84.25 s, S-arrival = 102.43 s, Distance R = 156.07 km, PGV = 0.5711 cm/s, Magnitude M = 5.36
+
+Comparison: seismogram_B.csv was closer to the station, while seismogram_A.csv was stronger (higher magnitude).

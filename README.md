@@ -191,3 +191,38 @@ With log(age) Test R2 = 0.8037 (p=8); With log(age) + w/b Test R2 = 0.8064 (p=8)
 - **K-Means & Cluster Interpretation (B4–B5):** With `n_init=1`, inertia varies across random seeds (`1277.93`–`1282.46`) due to local minima; `n_init=10` reliably selects the lowest-inertia solution. The elbow curve bends sharply at **$k = 3$** (inertia always decreases as $k$ increases up to $k=n$, so minimising inertia alone would choose $k=n$). Cluster 0 (`n=65`) has low alcohol (`12.25`), low color intensity (`2.97`), and low proline (`510.17`); Cluster 1 (`n=51`) has high malic acid (`3.31`), very low flavanoids (`0.82`), and intense color (`7.23`); Cluster 2 (`n=62`) has high alcohol (`13.68`), rich flavanoids (`3.00`), low ash alkalinity (`17.46`), and very high proline (`1100.23`).
 - **Cultivar Reveal & Snakemake Automation (B6–B7):** Scaled 13D K-Means and 2D PC1–PC2 K-Means both achieve **96.63% agreement** (`172/178` wines) with the hidden true cultivars, whereas raw unscaled K-Means drops to **70.22%** because `proline` dominates Euclidean distances. Reproduced via `snakemake --cores 1` from `PW4/`; running it a second time reports `Nothing to be done` because all outputs are newer than their inputs, and editing `sessionA.py` reruns only `session_a` (and `all`), skipping `fetch` and `session_b`.
 - **Bonus (Supervised vs. Unsupervised):** Supervised `KNeighborsClassifier(5)` achieves **93.33%** test accuracy (both 13D and 2D PCA). Comparing this directly to B6's 96.63% unsupervised agreement is not completely fair because B6 evaluated cluster-to-label matching in-sample across all 178 wines with post-hoc label alignment, whereas supervised KNN was evaluated out-of-sample on a held-out 25% test split.
+
+## PW5 --- Signal Processing: Where Was the Earthquake, and How Strong?
+
+### Summary Table of Analysed Earthquakes (Step 9)
+| Event | $t_P$ (s) | $t_S$ (s) | Distance $R$ (km) | PGV (cm/s) | Magnitude $M$ |
+| :--- | :---: | :---: | :---: | :---: | :---: |
+| `seismogram_A.csv` | 108.42 | 144.08 | 306.13 | 1.5105 | 6.66 |
+| `seismogram_B.csv` | 84.25 | 102.43 | 156.07 | 0.5711 | 5.36 |
+
+- **Closer vs. Stronger:** `seismogram_B.csv` was closer to the station ($156.07\text{ km}$ vs. $306.13\text{ km}$), whereas `seismogram_A.csv` was stronger ($M = 6.66$ vs. $5.36$).
+
+### Step-by-Step Findings & Answers
+- **Step 1 — Waveform Inspection:** The first, weaker P-wave shaking appears most clearly on the **vertical (`Z`) channel** because compressional P-waves arrive steeply from below. The later, stronger S-wave and surface-wave shaking is largest on the **horizontal (`N` and `E`) channels**. Zooming into the first $60\text{ s}$ shows the station is not completely still: continuous low-amplitude ambient background noise is always present.
+  ![Three Channels](PW5/results/fig1_records.png)
+- **Step 2 — Frequency Spectrum (`fft` & `fftfreq`):**
+  - `np.fft.fftfreq` maps array indices to physical frequencies in **Hz** (positive and negative) using the $100\text{ Hz}$ sampling rate. The amplitude spectrum is mirrored around $0\text{ Hz}$ because the seismic velocity signal is **real-valued**, so its Fourier transform obeys conjugate symmetry $|X(-f)| = |X(f)|$.
+  - In the quiet first $60\text{ s}$, background noise is strongest around **$0.1\text{--}0.5\text{ Hz}$** (peaking near $0.2\text{ Hz}$), which corresponds to the global ocean **microseism** caused by ocean waves hitting coasts. The earthquake adds most of its energy in the **$0.5\text{--}10\text{ Hz}$** band.
+  ![FFT Spectra](PW5/results/fig2_spectra.png)
+- **Step 3 — Inverse FFT & Band-Pass Filter ($0.5\text{--}10\text{ Hz}$):**
+  - Frequency-domain filtering relies on `np.allclose(np.fft.ifft(np.fft.fft(Z)).real, Z)` because it verifies that FFT/IFFT is a lossless, invertible transform: zeroing out unwanted bins removes only those frequencies without distorting the rest of the waveform.
+  - The cut-offs $a = 0.5\text{ Hz}$ and $b = 10\text{ Hz}$ remove low-frequency ocean microseisms ($<0.5\text{ Hz}$) and high-frequency instrument/cultural noise ($>10\text{ Hz}$). Plotting `Z - clean` reveals the continuous ~$0.2\text{ Hz}$ microseism oscillation plus tiny high-frequency jitter removed across the entire record.
+  ![Removed Noise](PW5/results/fig3_removed_noise.png)
+- **Step 4 — Envelope Smoothing Window:** A window that is too short (`0.05 s`) follows individual wave oscillations and creates spiky false triggers; a window that is too long (`5 s`) over-smooths the signal and blurs sharp wave onsets. A **`0.5 s`** window cleanly tracks energy changes while preserving sharp arrival times.
+  ![Envelopes](PW5/results/fig4_envelopes.png)
+- **Step 5 — Arrival Times vs. Peak Amplitude:** For `seismogram_A.csv`, $t_P = 108.42\text{ s}$ and $t_S = 144.08\text{ s}$, whereas the horizontal envelope reaches its maximum later (~$155\text{ s}$). Using the maximum amplitude instead of the wave onset would artificially inflate $t_S - t_P$ and **overestimate the distance $R$**.
+  ![Arrivals](PW5/results/fig5_arrivals.png)
+- **Step 6 — Distance & Origin Time:** For `seismogram_A.csv`, $R = (144.08 - 108.42) / (1/3.6 - 1/6.2) = \mathbf{306.13\text{ km}}$. A $1\text{ s}$ uncertainty in $t_S$ shifts the distance by $\Delta R = 1 / (1/3.6 - 1/6.2) \approx \mathbf{8.59\text{ km}}$. The earthquake origin time is $t_0 = t_P - R / v_P = 108.42 - 306.13 / 6.2 = \mathbf{59.04\text{ s}}$.
+- **Step 7 — Spectrogram (`0–10 Hz`):** The **P-wave** arrives first with the highest frequencies (up to ~$8\text{--}10\text{ Hz}$), followed by the **S-wave** at intermediate frequencies (~$1\text{--}6\text{ Hz}$), and slower **surface waves** arriving last with the lowest frequencies (~$0.5\text{--}2\text{ Hz}$). Unlike Step 2's single whole-record FFT (which averages over all time), the spectrogram shows **when** each frequency band arrives.
+  ![Spectrogram](PW5/results/fig7_spectrogram.png)
+- **Step 8 — Magnitude Scaling:** For `seismogram_A.csv`, $\text{PGV} = 1.5105\text{ cm/s}$ and $M = 6.66$. The $+\log_{10} R$ term corrects for geometric spreading and attenuation with distance; ignoring it would cause an earthquake recorded twice as far away to have a lower PGV and an **underestimated magnitude**. At the same distance, an earthquake one magnitude unit larger ($\Delta M = +1$) produces a PGV larger by a factor of $10^{0.55} \approx \mathbf{3.55}$.
+- **Step 10 — Snakemake Workflow (`PW5/Snakefile`):**
+  - *(a)* Deleting `results/` and running `snakemake --cores 1` runs `analyse` then `report` to generate `results/events.csv` and `results/report.txt`.
+  - *(b)* Running `snakemake --cores 1` again reports `Nothing to be done` because all outputs exist and are up to date.
+  - *(c)* Editing `report.py` reruns **only `report`** (and `all`), skipping `analyse`.
+  - *(d)* Editing the filter cut-off `b` in `analyse.py` reruns **`analyse` and then downstream `report`**, ensuring the final report automatically reflects the updated analysis.
